@@ -23,6 +23,16 @@ async def get_all(db: Session = Depends(get_db)):
     return TaskService.get_all(db)
 
 
+@router.get('/{id}/comments', tags=['task'])
+async def get_comments(id: int = None, db: Session = Depends(get_db)):
+    return TaskService.get_comments(id, db)
+
+
+@router.get('/{id}/subtaska', tags=['task'])
+async def get_comments(id: int = None, db: Session = Depends(get_db)):
+    return TaskService.get_subtask(id, db)
+
+
 @router.put('/{id}', tags=['task'])
 async def update(id: int = None, data: TaskDto.Task = None, db: Session = Depends(get_db)):
     return TaskService.update(data, db, id)

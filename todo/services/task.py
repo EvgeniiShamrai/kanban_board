@@ -24,6 +24,16 @@ def get_task(id: int, db: Session):
     return db.query(Task).filter(Task.id == id).first()
 
 
+def get_comments(id: int, db: Session):
+    task = get_task(id, db)
+    return task.comments
+
+
+def get_subtask(id: int, db: Session):
+    task = get_task(id, db)
+    return task.children
+
+
 def update(data: task.Task, db: Session, id: int):
     task_up = db.query(Task).filter(Task.id == id).first()
     task_up.title = data.title
