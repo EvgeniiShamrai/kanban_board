@@ -31,18 +31,11 @@ class Task(Base):
     dashboard = relationship(Dashboard, back_populates='tasks')
     dashboard_id = Column(Integer, ForeignKey('dashboard.id'))
     comments: Mapped[List["Comment"]] = relationship(back_populates="task")
-    children: Mapped[List["Subtask"]] = relationship()
+    parent_id = Column(Integer, ForeignKey('task.id'))
+    parent = relationship('Task', remote_side=[id])
+    tasks: Mapped[List["Task"]] = relationship(back_populates="parent")
     create_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-
-class Subtask(Base):
-    __tablename__ = "subtask"
-    parent: Mapped[int] = Column(ForeignKey("task.id"), primary_key=True)
-    children: Mapped[int] = Column(
-        ForeignKey("task.id"), primary_key=True
-    )
-    child: Mapped["Task"] = relationship()
 
 
 class Comment(Base):

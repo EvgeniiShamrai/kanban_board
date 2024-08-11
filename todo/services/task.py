@@ -9,8 +9,12 @@ from todo.services.status import get_status
 def create_task(data: task.Task, db: Session):
     status = get_status(data.status_id, db)
     dashboard = get_dashboard(data.dashboard_id, db)
+    if (data.parent_id is None) :
+        parent = None
+    else:
+        parent = get_task(data.parent_id, db)
     task = Task(title=data.title, description=data.description, status_id=data.status_id, status=status,
-                dashboard=dashboard, dashboard_id=data.dashboard_id)
+                dashboard=dashboard, dashboard_id=data.dashboard_id, parent=parent, parent_id=data.parent_id)
     try:
         db.add(task)
         db.commit()
@@ -31,7 +35,7 @@ def get_comments(id: int, db: Session):
 
 def get_subtask(id: int, db: Session):
     task = get_task(id, db)
-    return task.children
+    return task.tasks
 
 
 def update(data: task.Task, db: Session, id: int):
@@ -39,6 +43,8 @@ def update(data: task.Task, db: Session, id: int):
     task_up.title = data.title
     task_up.description = data.description
     task_up.status_id = data.status.id
+    task_up.dashboard_id = data.dashboard_id
+    task_up.parent_id = data.parent_id
     db.add(task_up)
     db.commit()
     db.refresh(task_up)
