@@ -1,15 +1,14 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 
-from db.database import get_db
-from todo.dto.user import Token, TokenData, UserCreate, UserResponse
-from todo.services.user import * 
+from todo.dto.user import Token, UserCreate, UserResponse
+from todo.services.user import *
 from todo.utils import create_access_token, get_password_hash
 
 router = APIRouter()
 
-@router.post("/token", response_model=Token)
+
+@router.post("/token", response_model=Token, tags=['users'])
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
@@ -21,7 +20,8 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post("/signup", response_model=UserResponse)
+
+@router.post("/signup", response_model=UserResponse, tags=['users'])
 def signup(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user(db, email=user.email)
     if db_user:
@@ -33,6 +33,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
-@router.get("/me", response_model=UserResponse)
+
+@router.get("/me", response_model=UserResponse, tags=['users'])
 def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
