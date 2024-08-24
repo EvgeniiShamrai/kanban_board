@@ -1,33 +1,38 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from todo.dto import user as UserDto
-from todo.services import user as UserService
+from todo.dto.user import Token, TokenData, UserCreate, UserResponse
+from todo.services.user import * 
+from todo.utils import create_access_token, get_password_hash
 
 router = APIRouter()
 
+@router.post("/token", response_model=Token)
+def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
 
-@router.post('/', tags=['user'])
-async def create(data: UserDto.User = None, db: Session = Depends(get_db)):
-    return UserService.create_user(data, db)
+@router.post("/signup", response_model=UserResponse)
+def signup(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = get_user(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    hashed_password = get_password_hash(user.password)
+    db_user = User(email=user.email, name=user.name, password=hashed_password, role_id=user.role_id)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
-
-@router.get('/{id}', tags=['user'])
-async def get(id: int = None, db: Session = Depends(get_db)):
-    return UserService.get_user(id, db)
-
-
-@router.get('/', tags=['user'])
-async def get_all(db: Session = Depends(get_db)):
-    return UserService.get_all(db)
-
-
-@router.put('/{id}', tags=['user'])
-async def update(id: int = None, data: UserDto.User = None, db: Session = Depends(get_db)):
-    return UserService.update(data, db, id)
-
-
-@router.delete('/{id}', tags=['user'])
-async def delete(id: int = None, db: Session = Depends(get_db)):
-    return UserService.remove(db, id)
+@router.get("/me", response_model=UserResponse)
+def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
