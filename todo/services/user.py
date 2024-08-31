@@ -1,18 +1,23 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from jose import JWTError, jwt
 from todo.dto.user import TokenData
 from todo.models.models import User
-from todo.services.role import get_role
 from todo.utils import verify_password, SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
+
 def get_user(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
+
+
+def get_user_by_id(pk: int, db: Session):
+    return db.query(User).filter(User.id == pk).first()
+
 
 def authenticate_user(db: Session, username: str, password: str):
     user = get_user(db, username)

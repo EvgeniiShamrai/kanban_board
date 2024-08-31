@@ -1,6 +1,6 @@
 from typing import List
 
-from sqlalchemy import ForeignKey, Column, Integer, String, DateTime
+from sqlalchemy import ForeignKey, Column, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.sql import func
 
@@ -48,6 +48,7 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(225), index=True)
     description = Column(String(), index=True)
+    complexity = Column(Float, index=True)
     status = relationship(Status, back_populates='tasks')
     status_id = Column(Integer, ForeignKey('status.id'))
     dashboard = relationship(Dashboard, back_populates='tasks')
@@ -56,10 +57,8 @@ class Task(Base):
     parent_id = Column(Integer, ForeignKey('task.id'))
     parent = relationship('Task', remote_side=[id])
     tasks: Mapped[List["Task"]] = relationship(back_populates="parent")
-
     executor_id = Column(Integer, ForeignKey('user.id'))
     author_id = Column(Integer, ForeignKey('user.id'))
-
     executor = relationship("User", back_populates='tasks', foreign_keys=[executor_id])
     author = relationship("User", back_populates='created_tasks', foreign_keys=[author_id])
 

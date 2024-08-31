@@ -4,19 +4,20 @@ from todo.dto import task
 from todo.models.models import Task
 from todo.services.dashboard import get_dashboard
 from todo.services.status import get_status
-from todo.services.user import get_user
+from todo.services.user import get_user_by_id
 
 
 def create_task(data: task.Task, db: Session):
     status = get_status(data.status_id, db)
-    executor = get_user(data.executor_id, db)
-    author = get_user(data.author_id, db)
+    executor = get_user_by_id(data.executor_id, db)
+    author = get_user_by_id(data.author_id, db)
     dashboard = get_dashboard(data.dashboard_id, db)
-    if (data.parent_id is None):
+    if data.parent_id is None:
         parent = None
     else:
         parent = get_task(data.parent_id, db)
-    task = Task(title=data.title, description=data.description, status_id=data.status_id, status=status,
+    task = Task(title=data.title, description=data.description, complexity=data.complexity, status_id=data.status_id,
+                status=status,
                 dashboard=dashboard, dashboard_id=data.dashboard_id, executor=executor, executor_id=data.executor_id,
                 author=author, author_id=data.author_id, parent=parent, parent_id=data.parent_id)
     try:
@@ -46,12 +47,13 @@ def update(data: task.Task, db: Session, id: int):
     task_up = db.query(Task).filter(Task.id == id).first()
     task_up.title = data.title
     task_up.description = data.description
-    task_up.status_id = data.status.id
-    task_up.executor = get_user(data.executor_id, db)
-    task_up.author = get_user(data.author_id, db)
+    task_up.complexity = data.complexity
+    task_up.status = get_status(data.status_id, db)
+    task_up.executor = get_user_by_id(data.executor_id, db)
+    task_up.author = get_user_by_id(data.author_id, db)
     task_up.executor_id = data.executor_id
     task_up.author_id = data.author_id
-    task_up.status_id = data.status.id
+    task_up.status_id = data.status_id
     db.add(task_up)
     db.commit()
     db.refresh(task_up)
