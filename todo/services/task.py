@@ -16,7 +16,8 @@ def create_task(data: task.Task, db: Session):
         parent = None
     else:
         parent = get_task(data.parent_id, db)
-    task = Task(title=data.title, description=data.description, complexity=data.complexity, status_id=data.status_id,
+    task = Task(title=data.title, description=data.description, labor_intensity=data.labor_intensity,
+                start_task=data.start_task, dead_line_task=data.dead_line_task, status_id=data.status_id,
                 status=status,
                 dashboard=dashboard, dashboard_id=data.dashboard_id, executor=executor, executor_id=data.executor_id,
                 author=author, author_id=data.author_id, parent=parent, parent_id=data.parent_id)
@@ -47,8 +48,10 @@ def update(data: task.Task, db: Session, id: int):
     task_up = db.query(Task).filter(Task.id == id).first()
     task_up.title = data.title
     task_up.description = data.description
-    task_up.complexity = data.complexity
+    task_up.labor_intensity = data.labor_intensity
     task_up.status = get_status(data.status_id, db)
+    task_up.start_task = data.start_task
+    task_up.dead_line_task = data.dead_line_task
     task_up.executor = get_user_by_id(data.executor_id, db)
     task_up.author = get_user_by_id(data.author_id, db)
     task_up.executor_id = data.executor_id

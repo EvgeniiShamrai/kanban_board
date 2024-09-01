@@ -1,5 +1,8 @@
+from datetime import datetime
 from typing import List
 
+from fastapi import HTTPException, status
+from pydantic import field_validator
 from sqlalchemy import ForeignKey, Column, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.sql import func
@@ -48,7 +51,7 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(225), index=True)
     description = Column(String(), index=True)
-    complexity = Column(Float, index=True)
+    labor_intensity = Column(Float, index=True)
     status = relationship(Status, back_populates='tasks')
     status_id = Column(Integer, ForeignKey('status.id'))
     dashboard = relationship(Dashboard, back_populates='tasks')
@@ -61,9 +64,33 @@ class Task(Base):
     author_id = Column(Integer, ForeignKey('user.id'))
     executor = relationship("User", back_populates='tasks', foreign_keys=[executor_id])
     author = relationship("User", back_populates='created_tasks', foreign_keys=[author_id])
+    start_task = Column(DateTime, default=False)
+    dead_line_task = Column(DateTime, default=False)
 
     create_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    @field_validator('labor_intensity')
+    def check_complexity(cls, labor_intensity):
+        if labor_intensity <= 0:
+            raise ValueError('Input should be greater than 0')
+        return labor_intensity
+
+    @field_validator('start_task', 'dead_line_task')
+    def date_validation(cls, values):
+        if values['start_task'] >= values['dead_line_task']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Дата начала задачи должна быть меньше даты окончания')
+        try:
+            values['start_task'] = datetime.strptime(values['start_task'], '%Y-%m-%d').isoformat()
+            values['dead_line_task'] = datetime.strptime(values['dead_line_task'], '%Y-%m-%d').isoformat()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+        return values
 
 
 class Comment(Base):
