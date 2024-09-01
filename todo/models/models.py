@@ -70,27 +70,7 @@ class Task(Base):
     create_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    @field_validator('labor_intensity')
-    def check_complexity(cls, labor_intensity):
-        if labor_intensity <= 0:
-            raise ValueError('Input should be greater than 0')
-        return labor_intensity
-
-    @field_validator('start_task', 'dead_line_task')
-    def date_validation(cls, values):
-        if values['start_task'] >= values['dead_line_task']:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Дата начала задачи должна быть меньше даты окончания')
-        try:
-            values['start_task'] = datetime.strptime(values['start_task'], '%Y-%m-%d').isoformat()
-            values['dead_line_task'] = datetime.strptime(values['dead_line_task'], '%Y-%m-%d').isoformat()
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e),
-            )
-        return values
+    
 
 
 class Comment(Base):
