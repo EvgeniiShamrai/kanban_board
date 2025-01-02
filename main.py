@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from db.database import engine, Base
 from todo.routers import comment as comment_router
@@ -11,6 +12,19 @@ from todo.routers import user as user_router
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",  # Next.js (локальная разработка)
+    "http://127.0.0.1:3000", # Альтернативный локальный домен
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,            # Разрешённые источники
+    allow_credentials=True,          # Разрешить отправку cookie
+    allow_methods=["*"],             # Разрешённые методы: GET, POST, DELETE и т.д.
+    allow_headers=["*"],             # Разрешённые заголовки: Authorization, Content-Type и т.д.
+)
 
 app.include_router(task_router.router, prefix='/task')
 app.include_router(status_router.router, prefix='/status')
