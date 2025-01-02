@@ -12,7 +12,7 @@ def create_task(data: task.Task, db: Session):
     executor = get_user(data.executor_id, db)
     author = get_user(data.author_id, db)
     dashboard = get_dashboard(data.dashboard_id, db)
-    if (data.parent_id is None):
+    if (data.parent_id is None or data.parent_id == 0):
         parent = None
     else:
         parent = get_task(data.parent_id, db)
@@ -46,12 +46,11 @@ def update(data: task.Task, db: Session, id: int):
     task_up = db.query(Task).filter(Task.id == id).first()
     task_up.title = data.title
     task_up.description = data.description
-    task_up.status_id = data.status.id
+    task_up.status_id = data.status_id
     task_up.executor = get_user(data.executor_id, db)
     task_up.author = get_user(data.author_id, db)
     task_up.executor_id = data.executor_id
     task_up.author_id = data.author_id
-    task_up.status_id = data.status.id
     db.add(task_up)
     db.commit()
     db.refresh(task_up)
